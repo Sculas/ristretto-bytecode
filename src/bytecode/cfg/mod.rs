@@ -52,9 +52,9 @@ impl ControlFlowGraph {
         self.entry_block.borrow()
     }
 
-    /// Transforms the control flow graph into a [`StackMapTable`][StackMapTable].
+    /// Transforms the control flow graph into a [`StackMapTable`].
     ///
-    /// [StackMapTable]: ristretto_classfile::attributes::Attribute::StackMapTable
+    /// [`StackMapTable`]: ristretto_classfile::attributes::Attribute::StackMapTable
     pub fn into_table(self) {
         todo!()
     }
@@ -91,7 +91,7 @@ mod tests {
         let (mut class, method) = test_method!("SimpleTest.class", ("example", "(I)I"));
         let cfg = test_construct(&mut class, &method);
 
-        let mut expected = test_blocks![
+        let expected = test_blocks![
             /* 0 */ (BasicBlockFlags::DECISION_POINT, 0..=4, [4, 1]),
             /* 1 */ (BasicBlockFlags::DECISION_POINT, 5..=9, [3, 2]),
             /* 2 */ (BasicBlockFlags::EXIT_POINT, 10..=13),

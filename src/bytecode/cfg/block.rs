@@ -88,7 +88,8 @@ pub(crate) struct BasicBlockContext<'a> {
     /// The list of instructions to process.
     instructions: &'a [Instruction],
     /// A list of all processed basic blocks.
-    blocks: &'a mut BasicBlockList,
+    // This field is public for testing purposes.
+    pub(super) blocks: &'a mut BasicBlockList,
     /// A list of exception handlers for this method (start_pc -> handler).
     exception_handlers: std::collections::HashMap<u16, Vec<&'a TryCatchBlock>>,
     /// An indicator that the next block is an exception handler.
@@ -681,46 +682,54 @@ pub(crate) mod tests {
     pub(crate) use blocks_eq;
     pub(crate) use test_blocks;
 
-    // TODO: Fix these tests to use the new BasicBlockContext.
-    // #[test]
-    // fn test_flatten_simple() {
-    //     // The input is pre-sorted for better readability.
-    //     let input = test_blocks![
-    //         /* 0 */ (BasicBlockFlags::DECISION_POINT, 0..=4, [4, 1]),
-    //         /* 1 */ (BasicBlockFlags::DECISION_POINT, 5..=9, [3, 2]),
-    //         /* 2 */ (BasicBlockFlags::EXIT_POINT, 10..=13),
-    //         /* 3 */ (BasicBlockFlags::UNCONDITIONAL_JUMP, 14..=16, [5]),
-    //         /* 4 */ (BasicBlockFlags::EXIT_POINT, 17..=20),
-    //         /* 5 */ (BasicBlockFlags::EXIT_POINT, 19..=20),
-    //     ];
-    //     let mut expected = test_blocks![
-    //         /* 0 */ (BasicBlockFlags::DECISION_POINT, 0..=4, [4, 1]),
-    //         /* 1 */ (BasicBlockFlags::DECISION_POINT, 5..=9, [3, 2]),
-    //         /* 2 */ (BasicBlockFlags::EXIT_POINT, 10..=13),
-    //         /* 3 */ (BasicBlockFlags::UNCONDITIONAL_JUMP, 14..=16, [5]),
-    //         /* 4 */ (BasicBlockFlags::FALLTHROUGH, 17..=18, [5]),
-    //         /* 5 */ (BasicBlockFlags::EXIT_POINT, 19..=20),
-    //     ];
+    #[track_caller]
+    fn test_flatten(input: &mut BasicBlockList, expected: &mut BasicBlockList) {
+        let (mut pool1, mut pool2) = (ConstantPool::default(), ConstantPool::default());
+        let mut expected = BasicBlockContext::new(&mut pool1, &[], expected, &[]);
+        let mut actual = BasicBlockContext::new(&mut pool2, &[], input, &[]);
+        BasicBlock::flatten_graph(&mut actual).unwrap();
+        blocks_eq!(expected.blocks, actual.blocks);
+    }
 
-    //     blocks_eq!(expected, BasicBlock::flatten_graph(input).unwrap());
-    // }
+    #[test]
+    fn test_flatten_simple() {
+        // The input is pre-sorted for better readability.
+        let mut input = test_blocks![
+            /* 0 */ (BasicBlockFlags::DECISION_POINT, 0..=4, [4, 1]),
+            /* 1 */ (BasicBlockFlags::DECISION_POINT, 5..=9, [3, 2]),
+            /* 2 */ (BasicBlockFlags::EXIT_POINT, 10..=13),
+            /* 3 */ (BasicBlockFlags::UNCONDITIONAL_JUMP, 14..=16, [5]),
+            /* 4 */ (BasicBlockFlags::EXIT_POINT, 17..=20),
+            /* 5 */ (BasicBlockFlags::EXIT_POINT, 19..=20),
+        ];
+        let mut expected = test_blocks![
+            /* 0 */ (BasicBlockFlags::DECISION_POINT, 0..=4, [4, 1]),
+            /* 1 */ (BasicBlockFlags::DECISION_POINT, 5..=9, [3, 2]),
+            /* 2 */ (BasicBlockFlags::EXIT_POINT, 10..=13),
+            /* 3 */ (BasicBlockFlags::UNCONDITIONAL_JUMP, 14..=16, [5]),
+            /* 4 */ (BasicBlockFlags::FALLTHROUGH, 17..=18, [5]),
+            /* 5 */ (BasicBlockFlags::EXIT_POINT, 19..=20),
+        ];
+        // Run the test.
+        test_flatten(&mut input, &mut expected);
+    }
 
-    // #[test]
-    // fn test_flatten_loop() {
-    //     // The input is pre-sorted for better readability.
-    //     let input = test_blocks![
-    //         /* 0 */ (BasicBlockFlags::DECISION_POINT, 0..=5, [3, 2]),
-    //         /* 1 */ (BasicBlockFlags::DECISION_POINT, 2..=5, [3, 2]),
-    //         /* 2 */ (BasicBlockFlags::UNCONDITIONAL_JUMP, 6..=9, [1]),
-    //         /* 3 */ (BasicBlockFlags::EXIT_POINT, 10..=13),
-    //     ];
-    //     let expected = test_blocks![
-    //         /* 0 */ (BasicBlockFlags::FALLTHROUGH, 0..=1, [1]),
-    //         /* 1 */ (BasicBlockFlags::DECISION_POINT, 2..=5, [3, 2]),
-    //         /* 2 */ (BasicBlockFlags::UNCONDITIONAL_JUMP, 6..=9, [1]),
-    //         /* 3 */ (BasicBlockFlags::EXIT_POINT, 10..=13),
-    //     ];
-
-    //     blocks_eq!(expected, BasicBlock::flatten_graph(input).unwrap());
-    // }
+    #[test]
+    fn test_flatten_loop() {
+        // The input is pre-sorted for better readability.
+        let mut input = test_blocks![
+            /* 0 */ (BasicBlockFlags::DECISION_POINT, 0..=5, [3, 2]),
+            /* 1 */ (BasicBlockFlags::DECISION_POINT, 2..=5, [3, 2]),
+            /* 2 */ (BasicBlockFlags::UNCONDITIONAL_JUMP, 6..=9, [1]),
+            /* 3 */ (BasicBlockFlags::EXIT_POINT, 10..=13),
+        ];
+        let mut expected = test_blocks![
+            /* 0 */ (BasicBlockFlags::FALLTHROUGH, 0..=1, [1]),
+            /* 1 */ (BasicBlockFlags::DECISION_POINT, 2..=5, [3, 2]),
+            /* 2 */ (BasicBlockFlags::UNCONDITIONAL_JUMP, 6..=9, [1]),
+            /* 3 */ (BasicBlockFlags::EXIT_POINT, 10..=13),
+        ];
+        // Run the test.
+        test_flatten(&mut input, &mut expected);
+    }
 }
