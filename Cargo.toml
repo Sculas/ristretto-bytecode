@@ -1,0 +1,17 @@
+[package]
+name = "ristretto_bytecode"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0 OR MIT"
+authors = ["Sculas <contact@sculas.xyz>"]
+categories = ["development-tools"]
+keywords = ["java", "bytecode", "verifier", "classfile"]
+repository = "https://github.com/theseus-rs/ristretto"
+
+[dependencies]
+ristretto_classfile = { git = "ssh://git@github.com/Sculas/ristretto.git", branch = "fix/exception-offsets" }
+thiserror = "2.0"
+bitflags = "2.6"
+
+[dev-dependencies]
+itertools = "0.13.0"
