@@ -81,8 +81,9 @@ dependencies = [
 
 [[package]]
 name = "ristretto_classfile"
-version = "0.12.0"
-source = "git+ssh://git@github.com/Sculas/ristretto.git?branch=fix%2Fexception-offsets#ac793550ce4dd27ccd87df5dfb6c1b7947986cf8"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df1400225e0ae2b636845e3266e289713b893ee7900b8606a6bfcbe989b83d2a"
 dependencies = [
  "bitflags",
  "byteorder",
