@@ -1,6 +1,6 @@
 # ristretto-bytecode
 
-A bytecode verifier and writer for the [ristretto-classfile](https://github.com/Sculas/ristretto-classfile) crate.
+A bytecode verifier and writer for the [ristretto-classfile](https://github.com/theseus-rs/ristretto/tree/main/ristretto_classfile) crate.
 
 **This crate is still in development and is not ready for use.**
 
